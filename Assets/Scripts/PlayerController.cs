@@ -8,32 +8,56 @@ public class PlayerController : MonoBehaviour
 
     public float movementSpeed = 1.0f;
     public float jumpStrength = 1.0f;
+    public float chargeStrength = 5.0f;
     public float rotationSpeed = 1.0f;
     public float verticalAngleLimit = 85.0f;
-
+    int charge = 0;
+    public bool charging = false;
+    public float chargeDuration = 2.0f;
     public bool jumpState = false, sprintState = false;
-    private int numJumps;
 
     private Vector3 currentRotation;
     Rigidbody rb;
+
+    //public GameObject target;
 
     // Start is called before the first frame update
     void Start()
     {
         //Grab the rigidbody we want to manipulate for movement
-        numJumps = 0;
         rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        //=======Lateral movement==========
-        MovePlayer();
-        //======Jumping========
-        Jump();
-        //=======Rotation=========
         Rotate();
+        //=======Lateral movement==========
+        if (Input.GetKey(KeyCode.Q) || Input.GetKeyUp(KeyCode.Q) && !charging)
+        {
+            ChargePlayer();
+            
+        }
+        else if (charging && chargeDuration > 0) 
+        {
+            chargeDuration -= Time.deltaTime;
+
+            if (chargeDuration <= 1) {
+                charging = false;
+            }
+            else {
+
+                rb.AddForce(Camera.main.transform.forward * chargeStrength, ForceMode.Impulse);
+            }
+
+        }
+        else
+        {
+            MovePlayer();
+            //======Jumping========
+            Jump();
+            //=======Rotation=========
+        }
     }
 
 
@@ -49,7 +73,7 @@ public class PlayerController : MonoBehaviour
         //3) Apply the velocity to the player's rigidbody.
 
         //Start with no lateral movement AND save y velocity
-        Vector3 direction = new Vector3(0, 0, 0);
+        Vector3 direction = new Vector3(0,0,0);
 
         //Q1) What happens if we dont save this value?
         float y = rb.velocity.y;
@@ -75,7 +99,7 @@ public class PlayerController : MonoBehaviour
         {
             direction += Camera.main.transform.right;
         }
-
+        
         if (Input.GetKey(KeyCode.LeftShift) && !jumpState)
         {
             mult = 1.5f;
@@ -83,7 +107,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            if (jumpState && sprintState)
+            if(jumpState && sprintState)
             {
                 mult = 1.5f;
             }
@@ -102,18 +126,14 @@ public class PlayerController : MonoBehaviour
         velocity.y = y;
         //apply the velocity to the player
         rb.velocity = velocity;
-    }
+    } 
 
     void Jump()
     {
         //When the Space bar is pressed, apply a positive vertical force
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if ((jumpState && numJumps < 2) || !jumpState)
-            {
-                rb.AddForce(gameObject.transform.up * jumpStrength, ForceMode.Impulse);
-                numJumps++;
-            }
+            rb.AddForce(gameObject.transform.up*jumpStrength, ForceMode.Impulse);
         }
     }
 
@@ -136,11 +156,33 @@ public class PlayerController : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         jumpState = false;
-        numJumps = 0;
     }
 
     private void OnCollisionExit(Collision collision)
     {
         jumpState = true;
     }
+
+    void ChargePlayer()
+    {
+        charge++;
+        if (charge >= 30)
+        {
+            Debug.Log("CHARGING" + charge);
+            chargeDuration = 2.0f;
+        }
+        if (Input.GetKeyUp(KeyCode.Q))
+        {
+            if (charge >= 30)
+            {
+                Debug.Log("SHOOT");
+                charging = true;
+                charge = Mathf.Clamp(charge, 30, 50);
+                //rb.AddForce(target.transform.position - transform.position, ForceMode.Acceleration);
+            }
+            charge = 0;
+        }
+
+    }
 }
+
