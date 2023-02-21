@@ -9,10 +9,14 @@ public class EnemyHealth : MonoBehaviour
 
     public int currentHealth;
 
+    public PlayerController pc;
+
     // Start is called before the first frame update
     void Start()
     {
         currentHealth = maxHealth;
+        pc = GameObject.Find("Player").GetComponent<PlayerController>();
+
     }
 
     public void DecreaseHealth(int value)
@@ -28,7 +32,7 @@ public class EnemyHealth : MonoBehaviour
     {
         if (collision.gameObject.TryGetComponent(out DamageDealer damageValues))
         {
-            if (damageValues.damageType == DamageDealer.DamageType.Player)
+            if (damageValues.damageType == DamageDealer.DamageType.Player && pc.charging)
             {
                 DecreaseHealth(damageValues.DamageValue);
                 if (currentHealth == 0)

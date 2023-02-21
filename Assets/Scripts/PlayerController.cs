@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour
     public bool charging = false;
     public float chargeDuration = 2.0f;
     public bool jumpState = false, sprintState = false;
+    int numJumps = 0;
 
     private Vector3 currentRotation;
     Rigidbody rb;
@@ -133,7 +134,11 @@ public class PlayerController : MonoBehaviour
         //When the Space bar is pressed, apply a positive vertical force
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            rb.AddForce(gameObject.transform.up*jumpStrength, ForceMode.Impulse);
+            if ((jumpState && numJumps < 2) || !jumpState)
+            {
+                rb.AddForce(gameObject.transform.up * jumpStrength, ForceMode.Impulse);
+                numJumps++;
+            }
         }
     }
 
@@ -155,7 +160,10 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+
         jumpState = false;
+        numJumps = 0;
+
     }
 
     private void OnCollisionExit(Collision collision)
@@ -166,18 +174,18 @@ public class PlayerController : MonoBehaviour
     void ChargePlayer()
     {
         charge++;
-        if (charge >= 30)
+        if (charge >= 20)
         {
             Debug.Log("CHARGING" + charge);
             chargeDuration = 2.0f;
         }
         if (Input.GetKeyUp(KeyCode.Q))
         {
-            if (charge >= 30)
+            if (charge >= 20)
             {
                 Debug.Log("SHOOT");
                 charging = true;
-                charge = Mathf.Clamp(charge, 30, 50);
+                charge = Mathf.Clamp(charge, 20, 40);
                 //rb.AddForce(target.transform.position - transform.position, ForceMode.Acceleration);
             }
             charge = 0;

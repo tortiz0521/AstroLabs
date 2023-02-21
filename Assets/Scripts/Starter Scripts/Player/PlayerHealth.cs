@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
+    public PlayerController pc;
+    public GameManager gm;
+
     [Header("Health")]
     [Tooltip("The max health the player can have")]
     public int maxHealth = 100;
@@ -35,7 +38,9 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
-       SetUpHealth();
+        SetUpHealth();
+        pc = GameObject.Find("Player").GetComponent<PlayerController>();
+        gm = GameObject.Find("Manager").GetComponent<GameManager>();
     }
 
     public void SetUpHealth()
@@ -173,7 +178,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (collision.gameObject.TryGetComponent(out DamageDealer damageValues))
         {
-            if (damageValues.damageType == DamageDealer.DamageType.Enemy ||
+            if ((damageValues.damageType == DamageDealer.DamageType.Enemy && !pc.charging) ||
                 damageValues.damageType == DamageDealer.DamageType.Environment)
             {
                 DecreaseHealth(damageValues.DamageValue);
@@ -222,6 +227,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TimeToDie()
     {
+        gm.Respawn(gameObject);
         if (gameObject.TryGetComponent(out ThirdPersonMovement movement))
         {
             if (movement.anim != null)
