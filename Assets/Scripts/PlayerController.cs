@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
     public bool charging = false;
     public float chargeDuration = 2.0f;
     public bool jumpState = false, sprintState = false;
-    int numJumps = 0;
+    public bool freezePlayer = false;
 
     private Vector3 currentRotation;
     Rigidbody rb;
@@ -32,32 +32,34 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Rotate();
-        //=======Lateral movement==========
-        if (Input.GetKey(KeyCode.Q) || Input.GetKeyUp(KeyCode.Q) && !charging)
-        {
-            ChargePlayer();
-            
-        }
-        else if (charging && chargeDuration > 0) 
-        {
-            chargeDuration -= Time.deltaTime;
-
-            if (chargeDuration <= 1) {
-                charging = false;
+        if (!freezePlayer) {
+            Rotate();
+            //=======Lateral movement==========
+            if (Input.GetKey(KeyCode.Q) || Input.GetKeyUp(KeyCode.Q) && !charging)
+            {
+                ChargePlayer();
+                
             }
-            else {
+            else if (charging && chargeDuration > 0) 
+            {
+                chargeDuration -= Time.deltaTime;
 
-                rb.AddForce(Camera.main.transform.forward * chargeStrength, ForceMode.Impulse);
+                if (chargeDuration <= 1) {
+                    charging = false;
+                }
+                else {
+
+                    rb.AddForce(Camera.main.transform.forward * chargeStrength, ForceMode.Impulse);
+                }
+
             }
-
-        }
-        else
-        {
-            MovePlayer();
-            //======Jumping========
-            Jump();
-            //=======Rotation=========
+            else
+            {
+                MovePlayer();
+                //======Jumping========
+                Jump();
+                //=======Rotation=========
+            }
         }
     }
 
@@ -134,11 +136,7 @@ public class PlayerController : MonoBehaviour
         //When the Space bar is pressed, apply a positive vertical force
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if ((jumpState && numJumps < 2) || !jumpState)
-            {
-                rb.AddForce(gameObject.transform.up * jumpStrength, ForceMode.Impulse);
-                numJumps++;
-            }
+            rb.AddForce(gameObject.transform.up*jumpStrength, ForceMode.Impulse);
         }
     }
 
@@ -160,10 +158,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-
         jumpState = false;
-        numJumps = 0;
-
     }
 
     private void OnCollisionExit(Collision collision)
@@ -174,18 +169,18 @@ public class PlayerController : MonoBehaviour
     void ChargePlayer()
     {
         charge++;
-        if (charge >= 20)
+        if (charge >= 30)
         {
             Debug.Log("CHARGING" + charge);
             chargeDuration = 2.0f;
         }
         if (Input.GetKeyUp(KeyCode.Q))
         {
-            if (charge >= 20)
+            if (charge >= 30)
             {
                 Debug.Log("SHOOT");
                 charging = true;
-                charge = Mathf.Clamp(charge, 20, 40);
+                charge = Mathf.Clamp(charge, 30, 50);
                 //rb.AddForce(target.transform.position - transform.position, ForceMode.Acceleration);
             }
             charge = 0;

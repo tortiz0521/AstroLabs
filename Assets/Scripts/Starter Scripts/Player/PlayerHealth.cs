@@ -119,7 +119,7 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    private void SegmentedHealthIncrease(int value)//Helper function
+    public void SegmentedHealthIncrease(int value)//Helper function
     {
         if (value + TempHearts.Count > Hearts.Count)
         {
@@ -154,6 +154,7 @@ public class PlayerHealth : MonoBehaviour
         }
         else
         {
+
             currentHealth = maxHealth;
             UpdateHealthBar();
         }
@@ -204,7 +205,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (collision.gameObject.TryGetComponent(out DamageDealer damageValues))
         {
-            if (damageValues.damageType == DamageDealer.DamageType.Enemy ||
+            if ((damageValues.damageType == DamageDealer.DamageType.Enemy && !pc.charging) ||
                 damageValues.damageType == DamageDealer.DamageType.Environment)
             {
                 DecreaseHealth(damageValues.DamageValue);
@@ -228,6 +229,7 @@ public class PlayerHealth : MonoBehaviour
     public void TimeToDie()
     {
         gm.Respawn(gameObject);
+        ResetHealth();
         if (gameObject.TryGetComponent(out ThirdPersonMovement movement))
         {
             if (movement.anim != null)

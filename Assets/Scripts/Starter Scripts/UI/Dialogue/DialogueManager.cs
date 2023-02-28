@@ -34,8 +34,8 @@ public class DialogueManager : MonoBehaviour
 
     [Tooltip("This is whether or not you want scrolling text in your game, or instant text")]
     public bool isScrollingText = true;
-    [Tooltip("The speed at which characters will scroll across the screen (in seconds per character). Recommend to have a very low value")]
-    public float typeSpeed = 0.05f;
+    [Tooltip("The speed at which the text will scroll across the screen (in seconds)")]
+    public float typeSpeed = 0.5f;
 
 
     // private bool isOpen; // represents if the dialogue box is open or closed
@@ -47,7 +47,7 @@ public class DialogueManager : MonoBehaviour
     /*This variable will store the script we need to access to stop player movement! If you are using a different movement script
      * make sure to change this variable appropriately and to make sure the movement script has a way to prevent character movement!
     */
-    private ThirdPersonMovement playerMovement;
+    private PlayerController playerMovement;
 
     /* ^ IMPORTANT IMPORTANT IMPORTANT IMPORTANT ^*/
 
@@ -61,13 +61,16 @@ public class DialogueManager : MonoBehaviour
     private bool isTyping = false;
     private bool cancelTyping = false;
 
-    private string tempString;
-
-    
+    [System.Serializable]
+    public class SpriteInfo
+    {
+        public string name;
+        public Sprite sprite;
+    }
     [Header("Dialogue Image")]
     [Tooltip("Invisible/Placeholder sprite for when no one is talking")]
     public Sprite invisSprite;
-    public SpeakerLibrary speakerSprites;
+    public List<SpriteInfo> speakerSpriteList = new List<SpriteInfo>();
     [HideInInspector]
     public List<string> speakerSpriteNames;
 
@@ -79,7 +82,7 @@ public class DialogueManager : MonoBehaviour
     private void Start()
     {
 
-        foreach (SpeakerLibrary.SpriteInfo info in speakerSprites.speakerSpriteList)
+        foreach (SpriteInfo info in speakerSpriteList)
         {
             speakerSpriteNames.Add(info.name);
         }
@@ -88,7 +91,7 @@ public class DialogueManager : MonoBehaviour
 
     private void FreezePlayer()
     {
-        playerMovement = GameObject.FindGameObjectWithTag("Player").GetComponent<ThirdPersonMovement>();
+        playerMovement = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
         playerMovement.freezePlayer = true;
     }
 
@@ -122,80 +125,70 @@ public class DialogueManager : MonoBehaviour
 
     private void PrintDialogue()
     {
-        if (!isTyping)
+        if (inputStream.Peek().Contains("EndQueue")) // special phrase to stop dialogue
         {
-            if (inputStream.Peek().Contains("EndQueue")) // special phrase to stop dialogue
+            // Clear Queue
+            if (!isTyping)
             {
-                // Clear Queue
+                inputStream.Dequeue();
+                EndDialogue();
+            }
+            else
+            {
+                cancelTyping = true;
+            }
+        }
+        else if (inputStream.Peek().Contains("[NAME=")) //Set the name of the speaker
+        {
+            string name = inputStream.Peek();
+            name = inputStream.Dequeue().Substring(name.IndexOf('=') + 1, name.IndexOf(']') - (name.IndexOf('=') + 1));
+            NameText.text = name;
+            PrintDialogue(); // print the rest of this line
+        }
+        else if (inputStream.Peek().Contains("[LEVEL=")) //On dialogue finish, go to following level
+        {
+            string part = inputStream.Peek();
+            string level = inputStream.Dequeue().Substring(part.IndexOf('=') + 1, part.IndexOf(']') - (part.IndexOf('=') + 1));
+            int levelIndex = Convert.ToInt32(level); //Convert string to integer
+            levelBool = true;
+            PrintDialogue(); // print the rest of this line
+        }
+        else if (inputStream.Peek().Contains("[SPEAKERSPRITE="))//The sprite of the speaker if you have it
+        {
+            string part = inputStream.Peek();
+            string spriteName = inputStream.Dequeue().Substring(part.IndexOf('=') + 1, part.IndexOf(']') - (part.IndexOf('=') + 1));
+            if (spriteName != "")
+            {
+                speaker.sprite = speakerSpriteList[speakerSpriteNames.IndexOf(spriteName)].sprite; //sets the speaker sprite to corresponding sprite
+            }
+            else
+            {
+                speaker.sprite = invisSprite;
+            }
+            PrintDialogue(); // print the rest of this line
+
+
+        }
+        else
+        {
+            if (isScrollingText)//This deals with all the scrolling text
+            {
                 if (!isTyping)
                 {
-                    inputStream.Dequeue();
-                    EndDialogue();
+                    string textString = inputStream.Dequeue();
+                    StartCoroutine(TextScroll(textString));
                 }
-                else
+                else if (isTyping && !cancelTyping)
                 {
                     cancelTyping = true;
                 }
             }
-            else if (inputStream.Peek().Contains("[NAME=")) //Set the name of the speaker
-            {
-                string name = inputStream.Peek();
-                name = inputStream.Dequeue().Substring(name.IndexOf('=') + 1, name.IndexOf(']') - (name.IndexOf('=') + 1));
-                NameText.text = name;
-                PrintDialogue(); // print the rest of this line
-            }
-            else if (inputStream.Peek().Contains("[LEVEL=")) //On dialogue finish, go to following level
-            {
-                string part = inputStream.Peek();
-                string level = inputStream.Dequeue().Substring(part.IndexOf('=') + 1, part.IndexOf(']') - (part.IndexOf('=') + 1));
-                int levelIndex = Convert.ToInt32(level); //Convert string to integer
-                levelBool = true;
-                PrintDialogue(); // print the rest of this line
-            }
-            else if (inputStream.Peek().Contains("[SPEAKERSPRITE="))//The sprite of the speaker if you have it
-            {
-                string part = inputStream.Peek();
-                string spriteName = inputStream.Dequeue().Substring(part.IndexOf('=') + 1, part.IndexOf(']') - (part.IndexOf('=') + 1));
-                if (spriteName != "")
-                {
-                    speaker.sprite = speakerSprites.speakerSpriteList[speakerSpriteNames.IndexOf(spriteName)].sprite; //sets the speaker sprite to corresponding sprite
-                }
-                else
-                {
-                    speaker.sprite = invisSprite;
-                }
-                PrintDialogue(); // print the rest of this line
-
-
-            }
             else
             {
-                if (isScrollingText)//This deals with all the scrolling text
-                {
-                    if (!isTyping)
-                    {
-                        tempString = inputStream.Dequeue();
-                        StartCoroutine(TextScroll(tempString));
-                    }
-                    
-                }
-                else
-                {
-                    TextBox.text = inputStream.Dequeue();
-                    continueImage.SetActive(true);
-                }
+                TextBox.text = inputStream.Dequeue();
+                continueImage.SetActive(true);
             }
         }
-        else
-        {
-            if (isTyping && !cancelTyping)
-            {
-                cancelTyping = true;
-                TextBox.text = tempString;
-            }
-                
-        }
-
 
 
     }

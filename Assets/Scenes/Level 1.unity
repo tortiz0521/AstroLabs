@@ -5694,6 +5694,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 2
   currentHealth: 2
+  pc: {fileID: 0}
 --- !u!114 &502062129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23354,6 +23355,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab016ef86d2a5e143be1580af9e24830, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pc: {fileID: 0}
+  gm: {fileID: 0}
   maxHealth: 6
   currentHealth: 6
   HealthBarSegments: {fileID: 1060007028}
@@ -23370,7 +23373,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1345256938}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 85be5fcd9c5b39a468dd36fc70db09f0, type: 3}
+  m_Script: {fileID: 11500000, guid: d50c90a50ef05a84a87e62fa02d96361, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   movementSpeed: 10
@@ -25918,6 +25921,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 2
   currentHealth: 2
+  pc: {fileID: 0}
 --- !u!114 &1625555556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33890,6 +33894,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 2
   currentHealth: 2
+  pc: {fileID: 0}
 --- !u!114 &1926886897
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50841,7 +50846,7 @@ GameObject:
   - component: {fileID: 8667052615399591958}
   m_Layer: 0
   m_Name: Free Burrow
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -54178,6 +54183,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 2
   currentHealth: 2
+  pc: {fileID: 0}
 --- !u!136 &8667052615399591960
 CapsuleCollider:
   m_ObjectHideFlags: 0
