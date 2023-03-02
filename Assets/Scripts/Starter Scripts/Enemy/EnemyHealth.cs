@@ -34,6 +34,7 @@ public class EnemyHealth : MonoBehaviour
         {
             if (damageValues.damageType == DamageDealer.DamageType.Player && pc.charging)
             {
+                pc.charging = false;
                 DecreaseHealth(damageValues.DamageValue);
                 if (currentHealth == 0)
                 {

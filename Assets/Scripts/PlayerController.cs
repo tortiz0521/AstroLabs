@@ -17,6 +17,9 @@ public class PlayerController : MonoBehaviour
     public bool jumpState = false, sprintState = false;
     public bool freezePlayer = false;
 
+    public AudioSource WalkAudioSource;
+
+
     private Vector3 currentRotation;
     Rigidbody rb;
 
@@ -55,6 +58,10 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
+                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) {
+                    WalkAudioSource.Play();
+                }
+                else WalkAudioSource.Pause();
                 MovePlayer();
                 //======Jumping========
                 Jump();
@@ -171,14 +178,12 @@ public class PlayerController : MonoBehaviour
         charge++;
         if (charge >= 30)
         {
-            Debug.Log("CHARGING" + charge);
             chargeDuration = 2.0f;
         }
         if (Input.GetKeyUp(KeyCode.Q))
         {
             if (charge >= 30)
             {
-                Debug.Log("SHOOT");
                 charging = true;
                 charge = Mathf.Clamp(charge, 30, 50);
                 //rb.AddForce(target.transform.position - transform.position, ForceMode.Acceleration);
