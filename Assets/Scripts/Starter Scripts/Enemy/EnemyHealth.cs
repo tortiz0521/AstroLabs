@@ -11,9 +11,18 @@ public class EnemyHealth : MonoBehaviour
 
     public PlayerController pc;
 
+    [Header("If creating AudioSource obj, name it EnemyHurtSource")]
+    public bool useExistingAudios = false;
+
+    [Header("Place .wav file here")]
+    public AudioClip HurtAudioClip;
+    public bool loopHurt = false;
+    [HideInInspector]public AudioSource HurtAudioSource;
+
     // Start is called before the first frame update
     void Start()
     {
+        InitAudio();
         currentHealth = maxHealth;
         pc = GameObject.Find("Player").GetComponent<PlayerController>();
 
@@ -34,7 +43,12 @@ public class EnemyHealth : MonoBehaviour
         {
             if (damageValues.damageType == DamageDealer.DamageType.Player && pc.charging)
             {
-                pc.charging = false;
+                if (!pc.freezePlayer) {
+                    HurtAudioSource.Play();
+                }
+                else {
+                    HurtAudioSource.Stop();
+                }
                 DecreaseHealth(damageValues.DamageValue);
                 if (currentHealth == 0)
                 {
@@ -43,5 +57,27 @@ public class EnemyHealth : MonoBehaviour
                 }
             }
         }
+    }
+    void InitAudio() {
+        if (useExistingAudios) {
+            HurtAudioSource = GameObject.Find("EnemyHurtSource").GetComponent<AudioSource>();
+        }
+        else {
+            GameObject HurtGameObject = new GameObject("HurtAudioSource");
+            
+            //AssignParent(HurtGameObject);
+
+            HurtAudioSource = HurtGameObject.AddComponent<AudioSource>();
+
+            HurtAudioSource.clip = HurtAudioClip;   
+
+            // can create option to add volume
+
+            HurtAudioSource.loop = loopHurt;
+        }
+    }
+    void AssignParent(GameObject obj)
+    {
+        obj.transform.parent = transform;
     }
 }

@@ -8,6 +8,15 @@ public class PlayerHealth : MonoBehaviour
     public PlayerController pc;
     public GameManager gm;
 
+    [Header("If creating AudioSource obj, name it PlayerHurtSource")]
+    public bool useExistingAudios = false;
+
+    [Header("Place .wav file here")]
+    public AudioClip HurtAudioClip;
+    public bool loopHurt = false;
+    [HideInInspector]public AudioSource HurtAudioSource;
+
+
     [Header("Health")]
     [Tooltip("The max health the player can have")]
     public int maxHealth = 100;
@@ -39,6 +48,7 @@ public class PlayerHealth : MonoBehaviour
     void Start()
     {
         SetUpHealth();
+        InitAudio();
         pc = GameObject.Find("Player").GetComponent<PlayerController>();
         gm = GameObject.Find("Manager").GetComponent<GameManager>();
     }
@@ -179,8 +189,10 @@ public class PlayerHealth : MonoBehaviour
     {
         if (collision.gameObject.TryGetComponent(out DamageDealer damageValues))
         {
-            if ((damageValues.damageType == DamageDealer.DamageType.Enemy && !pc.charging) ||
-                damageValues.damageType == DamageDealer.DamageType.Environment)
+            // if ((damageValues.damageType == DamageDealer.DamageType.Enemy && !pc.charging) ||
+            //     damageValues.damageType == DamageDealer.DamageType.Environment)
+            // {
+            if (damageValues.damageType == DamageDealer.DamageType.Environment)
             {
                 DecreaseHealth(damageValues.DamageValue);
                 if (currentHealth == 0)
@@ -205,14 +217,25 @@ public class PlayerHealth : MonoBehaviour
 
         if (collision.gameObject.TryGetComponent(out DamageDealer damageValues))
         {
+            // if (damageValues.damageType == DamageDealer.DamageType.Environment) 
+            // {
             if ((damageValues.damageType == DamageDealer.DamageType.Enemy && !pc.charging) ||
                 damageValues.damageType == DamageDealer.DamageType.Environment)
             {
+                if (!pc.freezePlayer) {
+                    HurtAudioSource.Play();
+                }
+                else {
+                    HurtAudioSource.Stop();
+                }
                 DecreaseHealth(damageValues.DamageValue);
                 if (currentHealth == 0)
                 {
                     TimeToDie();
                 }
+            }
+            else if (damageValues.damageType == DamageDealer.DamageType.Enemy && pc.charging) {
+                pc.charging = false;
             }
         }
         if (collision.gameObject.TryGetComponent(out HealValue healingValue))
@@ -252,5 +275,28 @@ public class PlayerHealth : MonoBehaviour
             manager.Respawn(gameObject);
         }
         ResetHealth();
+    }
+
+    void InitAudio() {
+        if (useExistingAudios) {
+            HurtAudioSource = GameObject.Find("PlayerHurtSource").GetComponent<AudioSource>();
+        }
+        else {
+            GameObject HurtGameObject = new GameObject("HurtAudioSource");
+            
+            AssignParent(HurtGameObject);
+
+            HurtAudioSource = HurtGameObject.AddComponent<AudioSource>();
+
+            HurtAudioSource.clip = HurtAudioClip;   
+
+            // can create option to add volume
+
+            HurtAudioSource.loop = loopHurt;
+        }
+    }
+    void AssignParent(GameObject obj)
+    {
+        obj.transform.parent = transform;
     }
 }

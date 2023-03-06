@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,9 +17,24 @@ public class PlayerController : MonoBehaviour
     public float chargeDuration = 2.0f;
     public bool jumpState = false, sprintState = false;
     public bool freezePlayer = false;
+    bool walkingAudio = false;
+    bool chargeUpAudio = false;
+    
+    [Header("Uses existing AudioSource game objects")]
+    public bool useExistingAudios = false;
 
-    public AudioSource WalkAudioSource;
+    [Header("Place .wav files here")]
+    public AudioClip WalkAudioClip;
+    public AudioClip ChargeUpAudioClip;
+    public AudioClip ChargingAudioClip;
 
+    public bool loopWalk = true;
+    public bool loopChargeUp = true;
+    public bool loopCharging = true;
+
+    [HideInInspector]public AudioSource WalkAudioSource;
+    [HideInInspector]public AudioSource ChargeUpAudioSource;
+    [HideInInspector]public AudioSource ChargingAudioSource;
 
     private Vector3 currentRotation;
     Rigidbody rb;
@@ -28,6 +44,10 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Audio initialization
+        InitAudio();
+
+
         //Grab the rigidbody we want to manipulate for movement
         rb = GetComponent<Rigidbody>();
     }
@@ -35,13 +55,35 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (walkingAudio && !WalkAudioSource.isPlaying && !freezePlayer) {
+            WalkAudioSource.Play();
+        }
+        else if (!walkingAudio || freezePlayer) {
+            WalkAudioSource.Stop();
+        }
+
+        if (chargeUpAudio && !ChargeUpAudioSource.isPlaying && !freezePlayer) {
+            ChargeUpAudioSource.Play();
+        }
+        else if (!chargeUpAudio || freezePlayer) {
+            ChargeUpAudioSource.Stop();
+        }
+
+        if (charging && !ChargingAudioSource.isPlaying && !freezePlayer) {
+            ChargingAudioSource.Play();
+        }
+        else if (!charging || freezePlayer) {
+            ChargingAudioSource.Stop();
+        }
         if (!freezePlayer) {
             Rotate();
             //=======Lateral movement==========
-            if (Input.GetKey(KeyCode.Q) || Input.GetKeyUp(KeyCode.Q) && !charging)
+            if ((Input.GetKey(KeyCode.Q) || Input.GetKeyUp(KeyCode.Q)) && !charging)
             {
+
+                walkingAudio = false;
+                chargeUpAudio = true;
                 ChargePlayer();
-                
             }
             else if (charging && chargeDuration > 0) 
             {
@@ -59,9 +101,11 @@ public class PlayerController : MonoBehaviour
             else
             {
                 if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) {
-                    WalkAudioSource.Play();
+                    walkingAudio = true;
                 }
-                else WalkAudioSource.Pause();
+                else {
+                    walkingAudio = false;
+                }
                 MovePlayer();
                 //======Jumping========
                 Jump();
@@ -180,17 +224,52 @@ public class PlayerController : MonoBehaviour
         {
             chargeDuration = 2.0f;
         }
-        if (Input.GetKeyUp(KeyCode.Q))
+        if (Input.GetKeyUp(KeyCode.Q)) // on release, if charge is above threshold, set charging to true, reset charge
         {
-            if (charge >= 30)
+            if (charge >= 30) // ~1 second of game time
             {
                 charging = true;
-                charge = Mathf.Clamp(charge, 30, 50);
-                //rb.AddForce(target.transform.position - transform.position, ForceMode.Acceleration);
             }
+            chargeUpAudio = false;
             charge = 0;
         }
 
+    }
+    void InitAudio() {
+        if (useExistingAudios) {
+            WalkAudioSource = GameObject.Find("WalkAudioSource").GetComponent<AudioSource>();
+            ChargeUpAudioSource = GameObject.Find("ChargeUpAudioSource").GetComponent<AudioSource>();
+            ChargingAudioSource = GameObject.Find("ChargingAudioSource").GetComponent<AudioSource>();
+        }
+        else {
+            GameObject WalkGameObject = new GameObject("WalkAudioSource");
+            GameObject ChargeUpGameObject = new GameObject("ChargeUpAudioSource");
+            GameObject ChargingGameObject = new GameObject("ChargingAudioSource");
+            
+            AssignParent(WalkGameObject);
+            AssignParent(ChargeUpGameObject);
+            AssignParent(ChargingGameObject);
+
+            WalkAudioSource = WalkGameObject.AddComponent<AudioSource>();
+            ChargeUpAudioSource = ChargeUpGameObject.AddComponent<AudioSource>();
+            ChargingAudioSource = ChargingGameObject.AddComponent<AudioSource>();
+
+            WalkAudioSource.clip = WalkAudioClip;   
+            ChargeUpAudioSource.clip = ChargeUpAudioClip;
+            ChargingAudioSource.clip = ChargingAudioClip;
+
+            // can create option to add volume
+
+            WalkAudioSource.loop = loopWalk;
+            ChargeUpAudioSource.loop = loopChargeUp;
+            ChargingAudioSource.loop = loopCharging;
+        }
+
+        
+    }
+    void AssignParent(GameObject obj)
+    {
+        obj.transform.parent = transform;
     }
 }
 
